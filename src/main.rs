@@ -82,12 +82,7 @@ fn start_server(clients: Arc<Clients>) -> ! {
 
     match socket {
         Ok(x) => {
-            println!("Socket connected");
-            //let mut clients = Clients::new();
-            let buf = &mut [0; 1024];
-
-            //clients.add_client(Uuid::parse_str("deadbeef-dead-dead-dead-beefbeefbeef").unwrap());
-
+            let buf = &mut [0; 2048];
             loop {
                 let (amt, src) = x.recv_from(buf).unwrap();
                 
@@ -98,10 +93,6 @@ fn start_server(clients: Arc<Clients>) -> ! {
                 } else {
                     println!("Error with message");
                 }
-
-                //println!("{:?}", &buf[0..amt]);
-                //println!("amount: {} src: {:?} data: {} ", amt, src, decoded);
-                //println!("uuid {:?} msg {:?}", uuid, msg.message);
             }
         },
         Err(x) => panic!("Error: {}", x)
@@ -396,6 +387,8 @@ fn spawn_http_server(clients: Arc<Clients>) {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
+                    use std::time::Duration;
+                    stream.set_read_timeout(Some(Duration::from_millis(250)));
                     serve(stream, clients.clone());
                 },
                 Err(e) => println!("Connection failed: {:?}", e)
