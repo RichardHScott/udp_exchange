@@ -1,13 +1,14 @@
-use std::net::UdpSocket;
-use std::net::Ipv4Addr;
-use std::net::IpAddr;
-use std::net::SocketAddr;
-use std::net::SocketAddrV4;
-use std::str::FromStr;
-
-use uuid::Uuid;
 extern crate uuid;
 extern crate docopt;
+extern crate rustc_serialize;
+
+use docopt::Docopt;
+
+use uuid::Uuid;
+
+use std::str::FromStr;
+use std::net::{TcpListener, TcpStream, UdpSocket, Ipv4Addr, IpAddr, SocketAddr, SocketAddrV4};
+use std::thread;
 
 static USAGE: &'static str = "
 Usage:
@@ -18,8 +19,6 @@ Options:
     -h, --help   display this help and exit
     -v, --version   output version information and exit
 ";
-extern crate rustc_serialize;
-use docopt::Docopt;
 
 #[derive(RustcDecodable)]
 struct Args {
@@ -34,6 +33,7 @@ fn main() {
     let args: Args = Docopt::new(USAGE).and_then(|d| d.decode()).unwrap_or_else(|e| e.exit());
 
     if args.cmd_server {
+        spawn_http_server();
         start_server();
     } else if args.cmd_client {
         let guid = Uuid::parse_str(&args.arg_guid.unwrap());
@@ -132,7 +132,6 @@ fn decode(buf: &[u8]) -> String {
 struct Data<T>{
     timestamp: String,
     message: T,
-    //p: std::marker::PhatomData<'a>
 }
 
 impl<T> Data<T> {
@@ -216,6 +215,44 @@ impl Clients {
     }
 }
 
-fn serve() {
+fn spawn_http_server() {
 
+
+    thread::spawn(| | {
+        let listener = TcpListener::bind("127.0.0.1:8787").unwrap();
+
+        //Note this is single threaded.
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    serve(stream);
+                },
+                Err(e) => println!("Connection failed: {:?}", e)
+            }
+        }
+    });
+}
+
+fn serve(mut stream :TcpStream) {
+    use std::io::{Read, Write};
+    use std::net::Shutdown;
+
+    let ref mut buf: String = String::new();
+    println!("Tcp stream connection from {:?}", stream);
+
+    let buf = &mut [0; 1024];
+    let num_read = stream.read(buf);
+
+    let header = "HTTP/1.0 200 OK".as_bytes();
+    let cr_lf ="\r\n".as_bytes();
+    let cr_lf ="\r\n".as_bytes();
+    let body = "<html><head></head><body><h1>test</h1></body></html>".as_bytes();
+
+    stream.write_all(header);
+    stream.write_all(cr_lf);
+    stream.write_all(cr_lf);
+    stream.write_all(body);
+    stream.write_all(cr_lf);
+
+    stream.shutdown(Shutdown::Both);
 }
