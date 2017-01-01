@@ -12,7 +12,7 @@ use std::net::{UdpSocket, SocketAddr, SocketAddrV4};
 use std::sync::Arc;
 
 mod clients;
-use clients::{Clients, Data};
+use clients::Clients;
 
 mod http_server;
 use http_server::*;
@@ -45,7 +45,7 @@ fn main() {
     if args.cmd_server {
         let clients = Arc::new(Clients::new());
 
-        spawn_http_server(clients.clone());
+        http_server::spawn_http_server(clients.clone());
         start_server(clients.clone());
     } else if args.cmd_client {
         let guid = Uuid::parse_str(&args.arg_guid.unwrap());
@@ -94,8 +94,7 @@ fn start_server(clients: Arc<Clients>) -> ! {
                 
                 let decoded = decode(&buf[0..amt]);
 
-                if let Ok( (uuid, msg) ) = Data::<String>::parse_packet_message(decoded, src) {
-                    clients.add_message(uuid, msg);
+                if let Ok( () ) = clients.add_message(decoded, src) {
                 } else {
                     println!("Error with message");
                 }
