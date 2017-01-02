@@ -1,11 +1,8 @@
 extern crate uuid;
 extern crate time;
 
-use time::Timespec;
 use uuid::Uuid;
 
-use std::cmp::Ordering;
-use std::str::FromStr;
 use std::sync::Mutex;
 use std::net::SocketAddr;
 
@@ -91,13 +88,13 @@ impl Client {
         self.guid
     }
 
-    fn get_messages(&self) -> Vec<String> {
+    fn get_messages(&self) -> Vec<(String, String)> {
         let vec = &mut self.list.get_all();
         vec.sort();
 
         let mut vec_str = Vec::with_capacity(vec.len());
         for v in vec {
-            vec_str.push(v.to_string());
+            vec_str.push((v.get_time_as_string() , v.to_string()));
         }
 
         vec_str
@@ -173,7 +170,7 @@ impl Clients {
         res
     }
 
-    pub fn get_messages_for_uuid(&self, uuid: &Uuid) -> Vec<String> {
+    pub fn get_messages_for_uuid(&self, uuid: &Uuid) -> Vec<(String, String)> {
         let vec = & *self.clients.lock().unwrap();
 
         for client in vec {

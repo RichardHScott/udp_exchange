@@ -2,11 +2,9 @@ extern crate uuid;
 extern crate time;
 
 use time::Timespec;
-use uuid::Uuid;
 
 use std::cmp::Ordering;
 use std::str::FromStr;
-use std::sync::Mutex;
 use std::net::SocketAddr;
 
 #[derive(Clone)]
@@ -40,6 +38,10 @@ impl<T : Clone + ToString> Data<T> {
         } else {
             return Err("Invalid message");
         }
+    }
+
+    pub fn get_time_as_string(&self) -> String {
+        time::at(self.timestamp).rfc3339().to_string()
     }
 }
 

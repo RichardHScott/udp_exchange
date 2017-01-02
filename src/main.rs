@@ -45,7 +45,7 @@ fn main() {
     if args.cmd_server {
         let clients = Arc::new(Clients::new());
 
-        http_server::spawn_http_server(clients.clone());
+        HttpServer::spawn_http_server(clients.clone());
         start_server(clients.clone());
     } else if args.cmd_client {
         let guid = Uuid::parse_str(&args.arg_guid.unwrap());
