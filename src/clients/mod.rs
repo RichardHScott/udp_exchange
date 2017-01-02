@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use std::sync::Mutex;
 use std::net::SocketAddr;
+use std::collections::HashMap;
 
 mod data;
 use clients::data::Data;
@@ -102,17 +103,17 @@ impl Client {
 }
 
 pub struct Clients {
-    clients: Mutex<Vec<Client>>,
+    clients: Mutex<HashMap<Uuid, Client>>,
 }
 
 impl Clients {
     pub fn new() -> Clients {
-        Clients { clients: Mutex::new(Vec::new()) }
+        Clients { clients: Mutex::new(HashMap::new()) }
     }
 
     pub fn add_client(&self, uuid: Uuid) {
-        let vec = &mut self.clients.lock().unwrap();
-        vec.push( Client::new(uuid) );
+        let map = &mut self.clients.lock().unwrap();
+        map.insert(uuid, Client::new(uuid) );
     }
 
     fn parse_packet_message(msg: String, src: SocketAddr) -> Result<(Uuid, Data<String>), &'static str> {
@@ -133,53 +134,29 @@ impl Clients {
     }
 
     fn add_data_message(&self, uuid: Uuid, msg: Data<String>) {
-        let mut vec = self.clients.lock().unwrap();
+        let mut map = self.clients.lock().unwrap();
 
-        for client in &mut *vec {
-            if client.guid == uuid {
-                client.put_message(msg);
-                return;
-            }
-        }
-
-        vec.push( Client::new(uuid) );
-        vec.last_mut().unwrap().put_message(msg);
+        let entry = map.entry(uuid).or_insert( Client::new(uuid) );
+        entry.put_message(msg);
     }
 
     pub fn get_clients(&self) -> Vec<String> {
-        let vec = self.clients.lock().unwrap();
-
-        let mut res = Vec::with_capacity(vec.len());
-
-        for client in & *vec {
-            res.push( client.get_name() );
-        }
-
-        res
+        let map = self.clients.lock().unwrap();
+        map.values().map(|v| { v.get_name() }).collect()
     }
 
     pub fn get_clients_uuids(&self) -> Vec<Uuid> {
-        let vec = self.clients.lock().unwrap();
-
-        let mut res = Vec::with_capacity(vec.len());
-
-        for client in & *vec {
-            res.push( client.get_uuid() );
-        }
-
-        res
+        let map = self.clients.lock().unwrap();
+        map.keys().map(|k| { k.clone() }).collect()
     }
 
     pub fn get_messages_for_uuid(&self, uuid: &Uuid) -> Vec<(String, String)> {
-        let vec = & *self.clients.lock().unwrap();
+        let map = self.clients.lock().unwrap();
 
-        for client in vec {
-            if client.guid == *uuid {
-                return client.get_messages();
-            }
+        match map.get(uuid) {
+            Some(e) => e.get_messages(),
+            None => Vec::new(),
         }
-
-        Vec::new()
     }
 
     pub fn create_message(uuid: &Uuid, msg: &String) -> String {

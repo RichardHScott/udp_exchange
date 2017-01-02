@@ -22,7 +22,7 @@ use encoder::*;
 
 static USAGE: &'static str = "
 Usage:
-  udp_send server
+  udp_send server <port>
   udp_send client <addr> <guid> <message>
 
 Options:
@@ -33,6 +33,7 @@ Options:
 #[derive(RustcDecodable)]
 struct Args {
     cmd_client: bool,
+    arg_port: Option<String>,
     arg_addr: Option<String>,
     arg_guid: Option<String>,
     arg_message: Option<String>,
@@ -46,7 +47,7 @@ fn main() {
         let clients = Arc::new(Clients::new());
 
         HttpServer::spawn_http_server(clients.clone());
-        start_server(clients.clone());
+        start_server(clients.clone(), u16::from_str(&args.arg_port.unwrap()).unwrap());
     } else if args.cmd_client {
         let guid = Uuid::parse_str(&args.arg_guid.unwrap());
 
@@ -74,8 +75,8 @@ fn start_client(address: &String, guid: &Uuid, msg: &String) {
     }
 }
 
-fn start_server(clients: Arc<Clients>) -> ! {
-    let socket = UdpSocket::bind("0.0.0.0:5890");
+fn start_server(clients: Arc<Clients>, port: u16) -> ! {
+    let socket = UdpSocket::bind(format!("0.0.0.0:{}", port).as_str());
 
     match socket {
         Ok(x) => {

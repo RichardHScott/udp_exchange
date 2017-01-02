@@ -47,7 +47,7 @@ impl HttpServer {
         body_str.push_str("<h1>Server details</h1>");
 
         body_str.push_str("<h2>Servers</h2>");
-        body_str.push_str(HttpServer::format_vec_as_list(clients.get_clients()).as_str());
+        body_str.push_str(HttpServer::format_vec_as_list(&clients.get_clients()).as_str());
 
         for uuid in &clients.get_clients_uuids() {
             body_str.push_str("<h2>");
@@ -64,7 +64,7 @@ impl HttpServer {
                 messages.push(t);
             }
 
-            body_str.push_str(HttpServer::format_vec_as_list(messages).as_str());
+            body_str.push_str(HttpServer::format_vec_as_list(&messages).as_str());
         }
 
         body_str.push_str("</body></html>");
@@ -80,12 +80,12 @@ impl HttpServer {
         stream.shutdown(Shutdown::Both).ok();
     }
 
-    fn format_vec_as_list(vec: Vec<String>) -> String {
+    fn format_vec_as_list(vec: &Vec<String>) -> String {
         let mut result = String::with_capacity(vec.len()*80);
 
-        String::from("<ul>");
+        result.push_str("<ul>");
 
-        for s in &vec {
+        for s in vec {
             result.push_str("<li>");
             result.push_str(s.as_str());
             result.push_str("</li>")
