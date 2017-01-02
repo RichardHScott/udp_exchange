@@ -47,12 +47,12 @@ fn main() {
         let clients = Arc::new(Clients::new());
 
         HttpServer::spawn_http_server(clients.clone());
-        start_server(clients.clone(), u16::from_str(&args.arg_port.unwrap()).unwrap());
+        start_udp_server(clients.clone(), u16::from_str(&args.arg_port.unwrap()).unwrap());
     } else if args.cmd_client {
         let guid = Uuid::parse_str(&args.arg_guid.unwrap());
 
         match guid {
-            Ok(id) => start_client(&args.arg_addr.unwrap(), &id, &args.arg_message.unwrap_or_else(| | panic!("Invalid message."))),
+            Ok(id) => start_udp_client(&args.arg_addr.unwrap(), &id, &args.arg_message.unwrap_or_else(| | panic!("Invalid message."))),
             _ => panic!("Parse error"),
         }
     }
@@ -60,7 +60,7 @@ fn main() {
     return;
 }
 
-fn start_client(address: &String, guid: &Uuid, msg: &String) {
+fn start_udp_client(address: &String, guid: &Uuid, msg: &String) {
     if let Ok(socket) = UdpSocket::bind("0.0.0.0:0") {
         let addr = SocketAddrV4::from_str(address).unwrap();
 
@@ -75,7 +75,7 @@ fn start_client(address: &String, guid: &Uuid, msg: &String) {
     }
 }
 
-fn start_server(clients: Arc<Clients>, port: u16) -> ! {
+fn start_udp_server(clients: Arc<Clients>, port: u16) -> ! {
     let socket = UdpSocket::bind(format!("0.0.0.0:{}", port).as_str());
 
     match socket {
