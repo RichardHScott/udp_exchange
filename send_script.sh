@@ -20,4 +20,4 @@ msg+=']'
 msg+='}'
 echo $msg
 
-`./udp_send client "127.0.0.1:5890" "$uuid" "$msg"`
+`./udp_exchange client "127.0.0.1:5890" "$uuid" "$msg"`

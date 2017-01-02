@@ -22,8 +22,8 @@ use encoder::*;
 
 static USAGE: &'static str = "
 Usage:
-  udp_send server <port>
-  udp_send client <addr> <guid> <message>
+  udp_exchange server <port>
+  udp_exchange client <addr> <guid> <message>
 
 Options:
     -h, --help   display this help and exit

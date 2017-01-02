@@ -1,6 +1,6 @@
 [package]
-name = "udp_send"
-version = "0.1.1"
+name = "udp_exchange"
+version = "0.1.2"
 authors = ["Richard Scott"]
 
 [dependencies]
